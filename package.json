@@ -1,0 +1,23 @@
+{
+  "name": "fis-postpackager-manifest",
+  "version": "1.0.0",
+  "description": "html添加manifest离线缓存",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xuanjinliang/fis-postpackager-manifest.git"
+  },
+  "keywords": [
+    "fis",
+    "manifest"
+  ],
+  "author": "xuanjinliang",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/xuanjinliang/fis-postpackager-manifest/issues"
+  },
+  "homepage": "https://github.com/xuanjinliang/fis-postpackager-manifest#readme"
+}
