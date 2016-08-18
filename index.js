@@ -59,16 +59,16 @@ module.exports = function(ret, conf, settings, opt){
             }
 
             let cacheTime = file.cache.timestamp,
-                ororiginFile = file.origin;
+                ororiginFile = file.origin,
+                htmlPath = dirPath + file.release.replace(file.ext,''),
+                filename = file.filename,
+                Content = file.getContent();
 
             if(manifestJson[ororiginFile] && manifestJson[ororiginFile] == cacheTime){
                 nullManifestJson[ororiginFile] = cacheTime;
+                file.setContent(replace(Content,filename));
                 return;
             }
-
-            let htmlPath = dirPath + file.release.replace(file.ext,''),
-                filename = file.filename,
-                Content = file.getContent();
 
             array.push(file.release);
 
@@ -134,13 +134,7 @@ module.exports = function(ret, conf, settings, opt){
                 appcacheName = htmlPath + '.appcache';
             writeFile(appcacheName,srcArray.join('\r\n'));
 
-            Content = Content.replace(/<(html)[^>]*>/i,function(m,$1){
-                if($1){
-                    return m.replace($1,'html manifest="'+filename+'.appcache"');
-                }
-                return m;
-            });
-            file.setContent(Content);
+            file.setContent(replace(Content,filename));
             nullManifestJson[ororiginFile] = cacheTime;
         }
     });
@@ -148,6 +142,16 @@ module.exports = function(ret, conf, settings, opt){
         writeFile(manifestCacheJson,JSON.stringify(nullManifestJson));
     }
 };
+
+function replace(content,filename){
+    content = content.replace(/<(html)[^>]*>/i,function(m,$1){
+        if($1){
+            return m.replace($1,'html manifest="'+filename+'.appcache"');
+        }
+        return m;
+    });
+    return content;
+}
 
 function writeFile(path,data){
     fis.util.write(path, data, 'utf-8', false);
