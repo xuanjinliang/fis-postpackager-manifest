@@ -5,10 +5,10 @@
 
 let rStyleScript = /(?:\s*(<link([^>]*?)(stylesheet){1}([^>]*?)(?:\/)?>))/ig,
     linkScript = /(?:(\s*<script([^>]*)>([\s\S]*?)<\/script>))/ig,
-    scriptSrc = /(?:\ssrc\s*=\s*)('([^']+)'|"([^\"]+)")/i,
-    styleUrl = /(?:\shref\s*=\s*)('([^']+)'|"([^"]+)"|[^\s\/>]+)/i,
+    scriptSrc = /(?:\ssrc\s*=\s*)('([^<>']+)'|"([^<>\"]+)")/i,
+    styleUrl = /(?:\shref\s*=\s*)('([^'<>]+)'|"([^"<>]+)"|[^\s\/>]+)/i,
     imgReg = /<(img)\s+[\s\S]*?\/?>/ig,
-    bgReg = /url\(((?:'|")?[^;)]*(?:'|")?)\)/ig,
+    bgReg = /url\(((?:'|")?[^<>;)]*(?:'|")?)\)/ig,
     manifestCache = fis.project.getCachePath() + '/manifest-' + fis.project.currentMedia(),
     manifestCacheJson = manifestCache + '/manifestData.json';
 
@@ -17,18 +17,22 @@ module.exports = function(ret, conf, settings, opt){
         imgAttr = settings.imgAttr || 'src',
         webp = settings.webP || false,
         cacheFile = settings.cacheFile || '',
-        ignoreFile = settings.ignoreFile || '';
+        ignoreFile = settings.ignoreFile || '',
+		imgSrc;
 
     if(imgAttr instanceof Array){
         imgAttr = imgAttr.join("|");
     }
+	imgSrc = new RegExp("(?:\\\s(?:"+imgAttr+")\\\s*=\\\s*)('([^']+)'|\"([^\"]+)\"|[^'\"\\\s>]+)","i");
 
     if(cacheFile instanceof Array){
         cacheFile = cacheFile.join("|");
+		cacheFile = new RegExp(cacheFile,"i");
     }
 
     if(ignoreFile instanceof Array){
         ignoreFile = ignoreFile.join("|");
+		ignoreFile = new RegExp(ignoreFile,"i");
     }
 
     if(!fis.util.isDir(manifestCache)){
@@ -38,8 +42,7 @@ module.exports = function(ret, conf, settings, opt){
     if(!fis.util.isFile(manifestCacheJson)){
         writeFile(manifestCacheJson,JSON.stringify({}));
     }
-
-    let imgSrc = new RegExp("(?:\\\s(?:"+imgAttr+")\\\s*=\\\s*)('([^']+)'|\"([^\"]+)\"|[^'\"\\\s>]+)","i");
+	
     let manifestJson = readFile(manifestCacheJson),nullManifestJson = {};
     manifestJson = JSON.parse(manifestJson);
 
