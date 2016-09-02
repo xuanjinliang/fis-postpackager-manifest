@@ -46,6 +46,19 @@ module.exports = function(ret, conf, settings, opt){
     let manifestJson = readFile(manifestCacheJson),nullManifestJson = {};
     manifestJson = JSON.parse(manifestJson);
 
+    //fis有更改全部更改
+    let array = fis.util.find(fis.project.getProjectPath()+'/fis-conf.js');
+    if(array.length <= 0){
+        console.log("Can't find the fis-conf.js on ProjectRoot!");
+        return;
+    }
+    let configPath = array[0],configTime = fis.util.mtime(configPath).getTime(),configChange = true;
+    if(manifestJson[configPath] && manifestJson[configPath] == configTime){
+        configChange = false;
+    }else{
+        nullManifestJson[configPath] = configTime;
+    }
+
     fis.util.map(ret.src,function(subpath,file,i){
         let array = [];
         if(file.isHtmlLike && file.rExt == '.html'){
@@ -64,13 +77,11 @@ module.exports = function(ret, conf, settings, opt){
                 filename = file.filename,
                 Content = file.getContent();
 
-            if(manifestJson[ororiginFile] && manifestJson[ororiginFile] == cacheTime){
+            if(!configChange && manifestJson[ororiginFile] && manifestJson[ororiginFile] == cacheTime){
                 nullManifestJson[ororiginFile] = cacheTime;
                 file.setContent(replace(Content,filename));
                 return;
             }
-
-            array.push(file.release);
 
             let linkArray = Content.match(rStyleScript),
                 scriptArray = Content.match(linkScript),
@@ -102,9 +113,10 @@ module.exports = function(ret, conf, settings, opt){
             //内嵌的css过滤
             if(bgArray){
                 bgArray.forEach(function(v,i){
-                    let url = v.match(bgReg);
+                    let url = v.match(bgReg),
+						img = url[0] && RegExp.$1;
                     if(url){
-                        url = RegExp.$1.replace(/\'|\"/ig,'').trim();
+                        url = img.replace(/\'|\"/ig,'').trim();
                         array.push(url);
                         if(webp){
                             url += '.webp';
@@ -117,18 +129,19 @@ module.exports = function(ret, conf, settings, opt){
             //img图片过滤
             if(imgArray){
                 imgArray.forEach(function(v){
-                    let src = v.match(imgSrc);
-                    if(src && !RegExp.$1.match('data:') && RegExp.$1.match(/\.(?:jpg|png|jpeg|gif|webp)/)){
-                        src = RegExp.$1.replace(/\'|\"/ig,'').trim();
+                    let src = v.match(imgSrc),
+						img = src[0] && RegExp.$1;
+                    if(src && !img.match('data:') && img.match(/\.(?:jpg|png|jpeg|gif|webp)/)){
+                        src = img.replace(/\'|\"/ig,'').trim();
                         array.push(src);
                         if(webp){
                             src += '.webp';
                             array.push(src);
                         }
                     }
-                })
+                });
             }
-
+		
             //创建appcache文件
             let srcArray = ['CACHE MANIFEST','# Time: '+ new Date().getTime(),'CACHE:',array.join('\r\n'),"NETWORK:","*"],
                 appcacheName = htmlPath + '.appcache';
