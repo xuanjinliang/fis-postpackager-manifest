@@ -12,7 +12,7 @@
     .match('::package', {
         postpackager: fis.plugin('manifest',{
             imgAttr:['data-webporiginal','src'],	 //检测页面中img属性包括图片地址，默认src
-            webP:true,                           //开启记录webp格式,例如:***.png ***.png.webp
+            webP:['jpg', 'png', 'jpeg'],         //开启记录webp格式,例如:***.png ***.png.webp, 参数为数组开启支持的类型，如果为true所有图片格式都打开，默认为false 
             cacheFile: ['2016FXFestival'],       //开启要添加缓存的文件夹下的文件，或指定文件	默认全局缓存
             ignoreFile: ['recruitArtist']        //过滤不缓存的文件夹下的所有文件，或指定文件 注:cacheFile开启后，ignoreFile不建议开启
         })

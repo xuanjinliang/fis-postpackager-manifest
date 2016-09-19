@@ -20,6 +20,11 @@ module.exports = function(ret, conf, settings, opt){
         ignoreFile = settings.ignoreFile || '',
 		imgSrc;
 
+    if(webp instanceof Array){
+        webp = webp.join("|");
+        webp = new RegExp(webp,"i");
+    }
+
     if(imgAttr instanceof Array){
         imgAttr = imgAttr.join("|");
     }
@@ -118,7 +123,7 @@ module.exports = function(ret, conf, settings, opt){
                     if(url){
                         url = img.replace(/\'|\"/ig,'').trim();
                         array.push(url);
-                        if(webp){
+                        if(webp === true || (webp && url.match(webp))){
                             url += '.webp';
                             array.push(url);
                         }
@@ -130,11 +135,11 @@ module.exports = function(ret, conf, settings, opt){
             if(imgArray){
                 imgArray.forEach(function(v){
                     let src = v.match(imgSrc),
-						img = src[0] && RegExp.$1;
-                    if(src && !img.match('data:') && img.match(/\.(?:jpg|png|jpeg|gif|webp)/)){
+						img = (src instanceof Array) && src[0] && RegExp.$1;
+                    if(img && !img.match('data:') && img.match(/\.(?:jpg|png|jpeg|gif|webp)/)){
                         src = img.replace(/\'|\"/ig,'').trim();
                         array.push(src);
-                        if(webp){
+                        if(webp === true || (webp && src.match(webp))){
                             src += '.webp';
                             array.push(src);
                         }
