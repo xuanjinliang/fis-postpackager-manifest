@@ -20,22 +20,22 @@ module.exports = function(ret, conf, settings, opt){
         ignoreFile = settings.ignoreFile || '',
 		imgSrc;
 
-    if(webp instanceof Array){
-        webp = webp.join("|");
+    if(webp instanceof Array && webp.length > 0){
+        webp = '\\.('+webp.join("|")+')';
         webp = new RegExp(webp,"i");
     }
 
-    if(imgAttr instanceof Array){
+    if(imgAttr instanceof Array && imgAttr.length > 0){
         imgAttr = imgAttr.join("|");
     }
 	imgSrc = new RegExp("(?:\\\s(?:"+imgAttr+")\\\s*=\\\s*)('([^']+)'|\"([^\"]+)\"|[^'\"\\\s>]+)","i");
 
-    if(cacheFile instanceof Array){
+    if(cacheFile instanceof Array && cacheFile.length > 0){
         cacheFile = cacheFile.join("|");
 		cacheFile = new RegExp(cacheFile,"i");
     }
 
-    if(ignoreFile instanceof Array){
+    if(ignoreFile instanceof Array && ignoreFile.length > 0){
         ignoreFile = ignoreFile.join("|");
 		ignoreFile = new RegExp(ignoreFile,"i");
     }
