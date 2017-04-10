@@ -11,6 +11,7 @@ let rStyleScript = /(?:\s*(<link([^>]*?)(stylesheet){1}([^>]*?)(?:\/)?>))/ig,
     bgReg = /url\(((?:'|")?[^<>;)]*(?:'|")?)\)/ig,
     manifestCache = fis.project.getCachePath() + '/manifest-' + fis.project.currentMedia(),
     manifestCacheJson = manifestCache + '/manifestData.json';
+let appcacheHash = new Date().getTime().toString();
 
 module.exports = function(ret, conf, settings, opt){
     let dirPath = fis.project.getProjectPath(),
@@ -60,9 +61,8 @@ module.exports = function(ret, conf, settings, opt){
     let configPath = array[0],configTime = fis.util.mtime(configPath).getTime(),configChange = true;
     if(manifestJson[configPath] && manifestJson[configPath] == configTime){
         configChange = false;
-    }else{
-        nullManifestJson[configPath] = configTime;
     }
+    nullManifestJson[configPath] = configTime;
 
     fis.util.map(ret.src,function(subpath,file,i){
         let array = [];
@@ -81,7 +81,7 @@ module.exports = function(ret, conf, settings, opt){
                 htmlPath = dirPath + file.release.replace(file.ext,''),
                 filename = file.filename,
                 Content = file.getContent();
-
+                
             if(!configChange && manifestJson[ororiginFile] && manifestJson[ororiginFile] == cacheTime){
                 nullManifestJson[ororiginFile] = cacheTime;
                 file.setContent(replace(Content,filename));
@@ -149,9 +149,8 @@ module.exports = function(ret, conf, settings, opt){
 		
             //创建appcache文件
             let srcArray = ['CACHE MANIFEST','# Time: '+ new Date().getTime(),'CACHE:',array.join('\r\n'),"NETWORK:","*"],
-                appcacheName = htmlPath + '.appcache';
+                appcacheName = htmlPath + '_' + appcacheHash + '.appcache';
             writeFile(appcacheName,srcArray.join('\r\n'));
-
             file.setContent(replace(Content,filename));
             nullManifestJson[ororiginFile] = cacheTime;
         }
@@ -164,7 +163,7 @@ module.exports = function(ret, conf, settings, opt){
 function replace(content,filename){
     content = content.replace(/<(html)[^>]*>/i,function(m,$1){
         if($1){
-            return m.replace($1,'html manifest="'+filename+'.appcache"');
+            return m.replace($1,'html manifest="'+filename+'_'+ appcacheHash +'.appcache"');
         }
         return m;
     });
