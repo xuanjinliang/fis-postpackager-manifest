@@ -80,9 +80,10 @@ module.exports = function(ret, conf, settings, opt){
                 htmlPath = dirPath + file.release.replace(file.ext,''),
                 filename = file.filename,
                 Content = file.getContent(),
-                fileHash = file.getHash();
-            if(!configChange && manifestJson[ororiginFile] && manifestJson[ororiginFile] == cacheTime){
-                nullManifestJson[ororiginFile] = cacheTime;
+                fileHash = fis.util.md5(file._content),
+                appcacheName = htmlPath + '_' + fileHash + '.appcache';
+            if(fis.util.isFile(appcacheName) &&!configChange && manifestJson[ororiginFile] && manifestJson[ororiginFile] == fileHash){
+                nullManifestJson[ororiginFile] = fileHash;
                 file.setContent(replace(Content,filename,fileHash));
                 return;
             }
@@ -147,11 +148,11 @@ module.exports = function(ret, conf, settings, opt){
             }
 		
             //创建appcache文件
-            let srcArray = ['CACHE MANIFEST','# Time: '+ new Date().getTime(),'CACHE:',array.join('\r\n'),"NETWORK:","*"],
-                appcacheName = htmlPath + '_' + fileHash + '.appcache';
+            let srcArray = ['CACHE MANIFEST','# Time: '+ new Date().getTime(),'CACHE:',array.join('\r\n'),"NETWORK:","*"];
             writeFile(appcacheName,srcArray.join('\r\n'));
+
             file.setContent(replace(Content,filename,fileHash));
-            nullManifestJson[ororiginFile] = cacheTime;
+            nullManifestJson[ororiginFile] = fileHash;
         }
     });
     if(Object.keys(nullManifestJson).length){
