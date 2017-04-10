@@ -11,7 +11,6 @@ let rStyleScript = /(?:\s*(<link([^>]*?)(stylesheet){1}([^>]*?)(?:\/)?>))/ig,
     bgReg = /url\(((?:'|")?[^<>;)]*(?:'|")?)\)/ig,
     manifestCache = fis.project.getCachePath() + '/manifest-' + fis.project.currentMedia(),
     manifestCacheJson = manifestCache + '/manifestData.json';
-let appcacheHash = new Date().getTime().toString();
 
 module.exports = function(ret, conf, settings, opt){
     let dirPath = fis.project.getProjectPath(),
@@ -80,11 +79,11 @@ module.exports = function(ret, conf, settings, opt){
                 ororiginFile = file.origin,
                 htmlPath = dirPath + file.release.replace(file.ext,''),
                 filename = file.filename,
-                Content = file.getContent();
-                
+                Content = file.getContent(),
+                fileHash = file.getHash();
             if(!configChange && manifestJson[ororiginFile] && manifestJson[ororiginFile] == cacheTime){
                 nullManifestJson[ororiginFile] = cacheTime;
-                file.setContent(replace(Content,filename));
+                file.setContent(replace(Content,filename,fileHash));
                 return;
             }
 
@@ -149,9 +148,9 @@ module.exports = function(ret, conf, settings, opt){
 		
             //创建appcache文件
             let srcArray = ['CACHE MANIFEST','# Time: '+ new Date().getTime(),'CACHE:',array.join('\r\n'),"NETWORK:","*"],
-                appcacheName = htmlPath + '_' + appcacheHash + '.appcache';
+                appcacheName = htmlPath + '_' + fileHash + '.appcache';
             writeFile(appcacheName,srcArray.join('\r\n'));
-            file.setContent(replace(Content,filename));
+            file.setContent(replace(Content,filename,fileHash));
             nullManifestJson[ororiginFile] = cacheTime;
         }
     });
@@ -160,10 +159,10 @@ module.exports = function(ret, conf, settings, opt){
     }
 };
 
-function replace(content,filename){
+function replace(content,filename,fileHash){
     content = content.replace(/<(html)[^>]*>/i,function(m,$1){
         if($1){
-            return m.replace($1,'html manifest="'+filename+'_'+ appcacheHash +'.appcache"');
+            return m.replace($1,'html manifest="'+filename+'_'+ fileHash +'.appcache"');
         }
         return m;
     });
