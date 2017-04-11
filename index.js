@@ -81,10 +81,10 @@ module.exports = function(ret, conf, settings, opt){
                 filename = file.filename,
                 Content = file.getContent(),
                 fileHash = fis.util.md5(file._content),
-                appcacheName = htmlPath + '_' + fileHash + '.appcache';
+                appcacheName = htmlPath + '.appcache';
             if(fis.util.isFile(appcacheName) &&!configChange && manifestJson[ororiginFile] && manifestJson[ororiginFile] == fileHash){
                 nullManifestJson[ororiginFile] = fileHash;
-                file.setContent(replace(Content,filename,fileHash));
+                file.setContent(replace(Content,filename));
                 return;
             }
 
@@ -151,7 +151,7 @@ module.exports = function(ret, conf, settings, opt){
             let srcArray = ['CACHE MANIFEST','# Time: '+ new Date().getTime(),'CACHE:',array.join('\r\n'),"NETWORK:","*"];
             writeFile(appcacheName,srcArray.join('\r\n'));
 
-            file.setContent(replace(Content,filename,fileHash));
+            file.setContent(replace(Content,filename));
             nullManifestJson[ororiginFile] = fileHash;
         }
     });
