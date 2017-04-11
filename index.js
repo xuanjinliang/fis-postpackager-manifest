@@ -60,9 +60,8 @@ module.exports = function(ret, conf, settings, opt){
     let configPath = array[0],configTime = fis.util.mtime(configPath).getTime(),configChange = true;
     if(manifestJson[configPath] && manifestJson[configPath] == configTime){
         configChange = false;
-    }else{
-        nullManifestJson[configPath] = configTime;
     }
+    nullManifestJson[configPath] = configTime;
 
     fis.util.map(ret.src,function(subpath,file,i){
         let array = [];
@@ -80,10 +79,11 @@ module.exports = function(ret, conf, settings, opt){
                 ororiginFile = file.origin,
                 htmlPath = dirPath + file.release.replace(file.ext,''),
                 filename = file.filename,
-                Content = file.getContent();
-
-            if(!configChange && manifestJson[ororiginFile] && manifestJson[ororiginFile] == cacheTime){
-                nullManifestJson[ororiginFile] = cacheTime;
+                Content = file.getContent(),
+                fileHash = fis.util.md5(file._content),
+                appcacheName = htmlPath + '.appcache';
+            if(fis.util.isFile(appcacheName) &&!configChange && manifestJson[ororiginFile] && manifestJson[ororiginFile] == fileHash){
+                nullManifestJson[ororiginFile] = fileHash;
                 file.setContent(replace(Content,filename));
                 return;
             }
@@ -148,12 +148,11 @@ module.exports = function(ret, conf, settings, opt){
             }
 		
             //创建appcache文件
-            let srcArray = ['CACHE MANIFEST','# Time: '+ new Date().getTime(),'CACHE:',array.join('\r\n'),"NETWORK:","*"],
-                appcacheName = htmlPath + '.appcache';
+            let srcArray = ['CACHE MANIFEST','# Time: '+ new Date().getTime(),'CACHE:',array.join('\r\n'),"NETWORK:","*"];
             writeFile(appcacheName,srcArray.join('\r\n'));
 
             file.setContent(replace(Content,filename));
-            nullManifestJson[ororiginFile] = cacheTime;
+            nullManifestJson[ororiginFile] = fileHash;
         }
     });
     if(Object.keys(nullManifestJson).length){
