@@ -60,9 +60,8 @@ module.exports = function(ret, conf, settings, opt){
     let configPath = array[0],configTime = fis.util.mtime(configPath).getTime(),configChange = true;
     if(manifestJson[configPath] && manifestJson[configPath] == configTime){
         configChange = false;
-    }else{
-        nullManifestJson[configPath] = configTime;
     }
+    nullManifestJson[configPath] = configTime;
 
     fis.util.map(ret.src,function(subpath,file,i){
         let array = [];
@@ -80,11 +79,12 @@ module.exports = function(ret, conf, settings, opt){
                 ororiginFile = file.origin,
                 htmlPath = dirPath + file.release.replace(file.ext,''),
                 filename = file.filename,
-                Content = file.getContent();
-
-            if(!configChange && manifestJson[ororiginFile] && manifestJson[ororiginFile] == cacheTime){
-                nullManifestJson[ororiginFile] = cacheTime;
-                file.setContent(replace(Content,filename));
+                Content = file.getContent(),
+                fileHash = fis.util.md5(file._content),
+                appcacheName = htmlPath + '_' + fileHash + '.appcache';
+            if(fis.util.isFile(appcacheName) &&!configChange && manifestJson[ororiginFile] && manifestJson[ororiginFile] == fileHash){
+                nullManifestJson[ororiginFile] = fileHash;
+                file.setContent(replace(Content,filename,fileHash));
                 return;
             }
 
@@ -148,12 +148,11 @@ module.exports = function(ret, conf, settings, opt){
             }
 		
             //创建appcache文件
-            let srcArray = ['CACHE MANIFEST','# Time: '+ new Date().getTime(),'CACHE:',array.join('\r\n'),"NETWORK:","*"],
-                appcacheName = htmlPath + '.appcache';
+            let srcArray = ['CACHE MANIFEST','# Time: '+ new Date().getTime(),'CACHE:',array.join('\r\n'),"NETWORK:","*"];
             writeFile(appcacheName,srcArray.join('\r\n'));
 
-            file.setContent(replace(Content,filename));
-            nullManifestJson[ororiginFile] = cacheTime;
+            file.setContent(replace(Content,filename,fileHash));
+            nullManifestJson[ororiginFile] = fileHash;
         }
     });
     if(Object.keys(nullManifestJson).length){
@@ -161,10 +160,10 @@ module.exports = function(ret, conf, settings, opt){
     }
 };
 
-function replace(content,filename){
+function replace(content,filename,fileHash){
     content = content.replace(/<(html)[^>]*>/i,function(m,$1){
         if($1){
-            return m.replace($1,'html manifest="'+filename+'.appcache"');
+            return m.replace($1,'html manifest="'+filename+'_'+ fileHash +'.appcache"');
         }
         return m;
     });
