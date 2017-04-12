@@ -160,10 +160,10 @@ module.exports = function(ret, conf, settings, opt){
     }
 };
 
-function replace(content,filename,fileHash){
+function replace(content,filename){
     content = content.replace(/<(html)[^>]*>/i,function(m,$1){
         if($1){
-            return m.replace($1,'html manifest="'+filename+'_'+ fileHash +'.appcache"');
+            return m.replace($1,'html manifest="'+filename+'.appcache"');
         }
         return m;
     });
